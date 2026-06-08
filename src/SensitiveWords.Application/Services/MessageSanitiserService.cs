@@ -26,6 +26,9 @@ namespace SensitiveWords.Application.Services
 
         private static Regex BuildRegex(List<SensitiveWordDto> words)
         {
+            if (words.Count == 0)
+                return new Regex("(?!)", RegexOptions.Compiled);
+
             var sorted = words
                 .Select(w => w.Word)
                 .OrderByDescending(w => w.Length);
