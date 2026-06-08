@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -138,6 +139,67 @@ namespace SensitiveWords.UnitTests.Caching
             await _sut.GetAllAsync(CancellationToken.None);
 
             _innerMock.Verify(r => r.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllAsync_ReturnsWords_OnCacheMiss()
+        {
+            _innerMock
+                .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(SampleWords);
+
+            var result = await _sut.GetAllAsync(CancellationToken.None);
+
+            result.Should().BeEquivalentTo(SampleWords);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_DelegatesDirectlyToInner()
+        {
+            _innerMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(SampleWords[0]);
+
+            var result = await _sut.GetByIdAsync(1, CancellationToken.None);
+
+            result.Should().BeEquivalentTo(SampleWords[0]);
+            _innerMock.Verify(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task CreateAsync_ReturnsNewId()
+        {
+            _innerMock
+                .Setup(r => r.CreateAsync(It.IsAny<CreateSensitiveWordRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(3);
+
+            var id = await _sut.CreateAsync(new CreateSensitiveWordRequest("INSERT"), CancellationToken.None);
+
+            id.Should().Be(3);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_ReturnsFalse_WhenWordNotFound()
+        {
+            _innerMock
+                .Setup(r => r.UpdateAsync(It.IsAny<int>(), It.IsAny<UpdateSensitiveWordRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _sut.UpdateAsync(999, new UpdateSensitiveWordRequest("UPDATED"), CancellationToken.None);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ReturnsFalse_WhenWordNotFound()
+        {
+            _innerMock
+                .Setup(r => r.DeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _sut.DeleteAsync(999, CancellationToken.None);
+
+            result.Should().BeFalse();
         }
     }
 }

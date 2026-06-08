@@ -117,5 +117,29 @@ namespace SensitiveWords.UnitTests.Services
 
             response.Output.Should().Be("Please **** the table");
         }
+
+        [Fact]
+        public async Task SanitiseAsync_ReturnsUnchangedMessage_WhenWordListIsEmpty()
+        {
+            _repositoryMock
+                .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Enumerable.Empty<SensitiveWordDto>());
+
+            var response = await _sut.SanitiseAsync(new SanitiseRequest("SELECT * FROM users"), CancellationToken.None);
+
+            response.Output.Should().Be("SELECT * FROM users");
+        }
+
+        [Fact]
+        public void SensitiveWordDto_Properties_AreAccessible()
+        {
+            var now = DateTime.UtcNow;
+            var dto = new SensitiveWordDto(1, "SELECT", now, null);
+
+            dto.Id.Should().Be(1);
+            dto.Word.Should().Be("SELECT");
+            dto.CreatedAt.Should().Be(now);
+            dto.UpdatedAt.Should().BeNull();
+        }
     }
 }
