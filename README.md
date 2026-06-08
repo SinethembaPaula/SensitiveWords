@@ -48,7 +48,7 @@ Navigate to `https://localhost:{port}/swagger` to explore the API.
 
 ## API Endpoints
 
-### Business Logic — External Consumption
+### Business Logic - External Consumption
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -64,7 +64,7 @@ Navigate to `https://localhost:{port}/swagger` to explore the API.
 { "output": "************* users" }
 ```
 
-### CRUD — Internal Consumption
+### CRUD - Internal Consumption
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -88,7 +88,7 @@ SensitiveWords.Api            - Controllers, middleware, Program.cs
 
 ### Key Design Decisions
 
-**Caching — Decorator Pattern**
+**Caching - Decorator Pattern**
 The `CachedSensitiveWordRepository` wraps the Dapper repository using the decorator pattern. The word list is loaded from the database once and cached in `IMemoryCache` with a 5-minute TTL. Any CRUD write operation immediately invalidates the cache.
 
 **Sanitisation Algorithm - Compiled Regex with Longest-Match-First**
@@ -127,7 +127,7 @@ All logs are structured and written to rolling daily files under `logs/`. Every 
 
 ### Why Azure API Management (APIM)?
 
-The assessment specifies two consumption types — internal (CRUD) and external (sanitise). APIM enforces this split at the infrastructure level:
+The assessment specifies two consumption types - internal (CRUD) and external (sanitise). APIM enforces this split at the infrastructure level:
 
 - External consumers hit `/api/messages/sanitise` with an API key - rate limited to prevent abuse
 - Internal consumers are restricted to the VNet - the CRUD endpoints are never publicly reachable
