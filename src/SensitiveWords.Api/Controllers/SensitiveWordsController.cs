@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SensitiveWords.Application.DTOs;
 using SensitiveWords.Application.Interfaces;
+using SensitiveWords.Application.Validators;
 
 namespace SensitiveWords.Api.Controllers
 {
@@ -28,11 +29,13 @@ namespace SensitiveWords.Api.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(SensitiveWordDto), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateSensitiveWordRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Word))
-                return BadRequest("Word cannot be empty.");
+            var errors = CreateSensitiveWordRequestValidator.Validate(request).ToList();
+            if (errors.Count > 0)
+                return ValidationProblem(new ValidationProblemDetails(
+                    errors.ToDictionary(_ => "word", e => new[] { e })));
 
             var id = await repository.CreateAsync(request, cancellationToken);
             var created = await repository.GetByIdAsync(id, cancellationToken);
@@ -41,12 +44,14 @@ namespace SensitiveWords.Api.Controllers
 
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateSensitiveWordRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Word))
-                return BadRequest("Word cannot be empty.");
+            var errors = UpdateSensitiveWordRequestValidator.Validate(request).ToList();
+            if (errors.Count > 0)
+                return ValidationProblem(new ValidationProblemDetails(
+                    errors.ToDictionary(_ => "word", e => new[] { e })));
 
             var updated = await repository.UpdateAsync(id, request, cancellationToken);
             return updated ? NoContent() : NotFound();

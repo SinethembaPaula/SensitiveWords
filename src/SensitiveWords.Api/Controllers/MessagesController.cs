@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SensitiveWords.Application.DTOs;
 using SensitiveWords.Application.Interfaces;
+using SensitiveWords.Application.Validators;
 
 namespace SensitiveWords.Api.Controllers
 {
@@ -11,11 +12,13 @@ namespace SensitiveWords.Api.Controllers
     {
         [HttpPost("sanitise")]
         [ProducesResponseType(typeof(SanitiseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Sanitise([FromBody] SanitiseRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.Input))
-                return BadRequest("Input cannot be empty.");
+            var errors = SanitiseRequestValidator.Validate(request).ToList();
+            if (errors.Count > 0)
+                return ValidationProblem(new ValidationProblemDetails(
+                    errors.ToDictionary(_ => "input", e => new[] { e })));
 
             var response = await sanitiserService.SanitiseAsync(request, cancellationToken);
             return Ok(response);

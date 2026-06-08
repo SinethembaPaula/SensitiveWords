@@ -1,8 +1,9 @@
-using Serilog;
+using SensitiveWords.Api.Middleware;
 using SensitiveWords.Application.Interfaces;
 using SensitiveWords.Application.Services;
 using SensitiveWords.Infrastructure.Caching;
 using SensitiveWords.Infrastructure.Persistence.Repositories;
+using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/sensitivewords-api-.log", rollingInterval: RollingInterval.Day)
@@ -51,6 +52,8 @@ try
     builder.Services.AddScoped<IMessageSanitiserService, MessageSanitiserService>();
 
     var app = builder.Build();
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     app.UseSerilogRequestLogging(options =>
     {

@@ -1,6 +1,0 @@
-@SensitiveWords.Api_HostAddress = http://localhost:5087
-
-GET {{SensitiveWords.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
