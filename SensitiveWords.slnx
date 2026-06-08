@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SensitiveWords.Api/SensitiveWords.Api.csproj" />
+    <Project Path="src/SensitiveWords.Application/SensitiveWords.Application.csproj" />
+    <Project Path="src/SensitiveWords.Infrastructure/SensitiveWords.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SensitiveWords.UnitTests/SensitiveWords.UnitTests.csproj" />
+  </Folder>
+</Solution>
