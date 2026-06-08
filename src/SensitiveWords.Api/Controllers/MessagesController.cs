@@ -18,7 +18,7 @@ namespace SensitiveWords.Api.Controllers
             var errors = SanitiseRequestValidator.Validate(request).ToList();
             if (errors.Count > 0)
                 return ValidationProblem(new ValidationProblemDetails(
-                    errors.ToDictionary(_ => "input", e => new[] { e })));
+                    new Dictionary<string, string[]> { ["input"] = errors.ToArray() }));
 
             var response = await sanitiserService.SanitiseAsync(request, cancellationToken);
             return Ok(response);

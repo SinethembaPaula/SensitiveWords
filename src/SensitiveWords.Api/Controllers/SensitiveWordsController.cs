@@ -35,7 +35,7 @@ namespace SensitiveWords.Api.Controllers
             var errors = CreateSensitiveWordRequestValidator.Validate(request).ToList();
             if (errors.Count > 0)
                 return ValidationProblem(new ValidationProblemDetails(
-                    errors.ToDictionary(_ => "word", e => new[] { e })));
+                    new Dictionary<string, string[]> { ["word"] = errors.ToArray() }));
 
             var id = await repository.CreateAsync(request, cancellationToken);
             var created = await repository.GetByIdAsync(id, cancellationToken);
@@ -51,7 +51,7 @@ namespace SensitiveWords.Api.Controllers
             var errors = UpdateSensitiveWordRequestValidator.Validate(request).ToList();
             if (errors.Count > 0)
                 return ValidationProblem(new ValidationProblemDetails(
-                    errors.ToDictionary(_ => "word", e => new[] { e })));
+                    new Dictionary<string, string[]> { ["word"] = errors.ToArray() }));
 
             var updated = await repository.UpdateAsync(id, request, cancellationToken);
             return updated ? NoContent() : NotFound();
