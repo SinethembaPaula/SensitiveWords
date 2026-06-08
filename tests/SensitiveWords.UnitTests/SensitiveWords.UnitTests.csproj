@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\SensitiveWords.Application\SensitiveWords.Application.csproj" />
+    <ProjectReference Include="..\..\src\SensitiveWords.Infrastructure\SensitiveWords.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
