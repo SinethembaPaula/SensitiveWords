@@ -1,10 +1,13 @@
-﻿using SensitiveWords.Application.DTOs;
+﻿using Microsoft.Extensions.Logging;
+using SensitiveWords.Application.DTOs;
 using SensitiveWords.Application.Interfaces;
 using System.Text.RegularExpressions;
 
 namespace SensitiveWords.Application.Services
 {
-    public sealed class MessageSanitiserService(ISensitiveWordRepository repository) : IMessageSanitiserService
+    public sealed class MessageSanitiserService(
+        ISensitiveWordRepository repository,
+        ILogger<MessageSanitiserService> logger) : IMessageSanitiserService
     {
         private const string CacheKey = "sensitive_words_regex";
 
@@ -13,12 +16,17 @@ namespace SensitiveWords.Application.Services
 
         public async Task<SanitiseResponse> SanitiseAsync(SanitiseRequest request, CancellationToken cancellationToken)
         {
+            logger.LogInformation("Sanitising message of length {Length}", request.Input.Length);
+
             var words = await repository.GetAllAsync(cancellationToken);
             var wordList = words.ToList();
 
             var regex = GetOrBuildRegex(wordList);
 
+            var replacementCount = regex.Matches(request.Input).Count;
             var sanitised = regex.Replace(request.Input, match => new string('*', match.Length));
+
+            logger.LogInformation("Sanitisation complete — {ReplacementCount} sensitive word(s) replaced", replacementCount);
 
             return new SanitiseResponse(sanitised);
         }

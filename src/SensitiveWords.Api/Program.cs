@@ -1,34 +1,77 @@
-var builder = WebApplication.CreateBuilder(args);
+using Serilog;
+using SensitiveWords.Application.Interfaces;
+using SensitiveWords.Application.Services;
+using SensitiveWords.Infrastructure.Caching;
+using SensitiveWords.Infrastructure.Persistence.Repositories;
 
-// Add services to the container.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File("logs/sensitivewords-api-.log", rollingInterval: RollingInterval.Day)
+    .CreateBootstrapLogger();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-app.UseHttpsRedirection();
-
-var summaries = new[]
+try
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    Log.Information("Starting SensitiveWords API");
 
-app.MapGet("/weatherforecast", () =>
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, configuration) =>
+        configuration.ReadFrom.Configuration(context.Configuration)
+                     .ReadFrom.Services(services)
+                     .Enrich.FromLogContext());
+
+    var connectionString = builder.Configuration.GetConnectionString("SensitiveWordsDb")
+        ?? throw new InvalidOperationException("Connection string 'SensitiveWordsDb' is not configured.");
+
+    builder.Services.AddControllers();
+    builder.Services.AddMemoryCache();
+
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new()
+        {
+            Title = "SensitiveWords API",
+            Version = "v1",
+            Description = "Sanitises messages by replacing sensitive words with asterisks."
+        });
+    });
+    builder.Services.AddEndpointsApiExplorer();
+
+    builder.Services.AddScoped<ISensitiveWordRepository>(serviceProvider =>
+    {
+        var inner = new SensitiveWordRepository(
+            connectionString,
+            serviceProvider.GetRequiredService<ILogger<SensitiveWordRepository>>());
+
+        var cache = serviceProvider.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+        var cacheLogger = serviceProvider.GetRequiredService<ILogger<CachedSensitiveWordRepository>>();
+
+        return new CachedSensitiveWordRepository(inner, cache, cacheLogger);
+    });
+
+    builder.Services.AddScoped<IMessageSanitiserService, MessageSanitiserService>();
+
+    var app = builder.Build();
+
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms";
+    });
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+    app.MapControllers();
+    app.Run();
+}
+catch (Exception ex) when (ex is not HostAbortedException)
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-});
-
-app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+    Log.Fatal(ex, "SensitiveWords API terminated unexpectedly");
+}
+finally
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    Log.CloseAndFlush();
 }
