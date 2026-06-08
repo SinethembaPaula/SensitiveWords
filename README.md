@@ -81,9 +81,9 @@ Navigate to `https://localhost:{port}/swagger` to explore the API.
 The solution follows Clean Architecture with 3 layers:
 
 ```
-SensitiveWords.Application    — Interfaces, DTOs, Validators, Services (no dependencies)
-SensitiveWords.Infrastructure — Dapper repository, cache decorator
-SensitiveWords.Api            — Controllers, middleware, Program.cs
+SensitiveWords.Application    - Interfaces, DTOs, Validators, Services (no dependencies)
+SensitiveWords.Infrastructure - Dapper repository, cache decorator
+SensitiveWords.Api            - Controllers, middleware, Program.cs
 ```
 
 ### Key Design Decisions
@@ -91,17 +91,17 @@ SensitiveWords.Api            — Controllers, middleware, Program.cs
 **Caching — Decorator Pattern**
 The `CachedSensitiveWordRepository` wraps the Dapper repository using the decorator pattern. The word list is loaded from the database once and cached in `IMemoryCache` with a 5-minute TTL. Any CRUD write operation immediately invalidates the cache.
 
-**Sanitisation Algorithm — Compiled Regex with Longest-Match-First**
-Words are sorted by length descending before building the Regex pattern. This ensures multi-word phrases like `SELECT * FROM` are matched before their component words (`SELECT`). The pattern uses `\b` word boundaries so substrings are never incorrectly starred — `SELECTION` is not affected by the word `SELECT`. A 2-second regex timeout prevents ReDoS attacks on malicious input.
+**Sanitisation Algorithm - Compiled Regex with Longest-Match-First**
+Words are sorted by length descending before building the Regex pattern. This ensures multi-word phrases like `SELECT * FROM` are matched before their component words (`SELECT`). The pattern uses `\b` word boundaries so substrings are never incorrectly starred - `SELECTION` is not affected by the word `SELECT`. A 2-second regex timeout prevents ReDoS attacks on malicious input.
 
-**Validation — Dedicated Validator Classes**
+**Validation -  Dedicated Validator Classes**
 Input validation lives in the Application layer, not in controllers. Controllers call validators and return `ValidationProblemDetails` (RFC 7807) on failure. This keeps controllers thin and validation independently testable.
 
-**Error Handling — Global Middleware**
+**Error Handling - Global Middleware**
 All unhandled exceptions are caught by `ExceptionHandlingMiddleware` and returned as RFC 7807 `ProblemDetails` responses. No exception details leak to the client.
 
-**Logging — Structured Serilog**
-All logs are structured and written to rolling daily files under `logs/`. Every log entry carries `RequestId`, `ConnectionId`, and `SourceContext` — allowing full request tracing from a single log file. The bootstrap logger captures startup failures before the host is built.
+**Logging - Structured Serilog**
+All logs are structured and written to rolling daily files under `logs/`. Every log entry carries `RequestId`, `ConnectionId`, and `SourceContext` - allowing full request tracing from a single log file. The bootstrap logger captures startup failures before the host is built.
 
 ---
 
@@ -129,8 +129,8 @@ All logs are structured and written to rolling daily files under `logs/`. Every 
 
 The assessment specifies two consumption types — internal (CRUD) and external (sanitise). APIM enforces this split at the infrastructure level:
 
-- External consumers hit `/api/messages/sanitise` with an API key — rate limited to prevent abuse
-- Internal consumers are restricted to the VNet — the CRUD endpoints are never publicly reachable
+- External consumers hit `/api/messages/sanitise` with an API key - rate limited to prevent abuse
+- Internal consumers are restricted to the VNet - the CRUD endpoints are never publicly reachable
 - No code changes required to enforce this separation
 
 ### Secrets Management
@@ -150,9 +150,9 @@ Push to main
 
 ### Observability
 
-- **Logs** — Serilog structured logs shipped to Azure Application Insights
-- **Health checks** — `/health` endpoint for load balancer probes (future enhancement)
-- **Alerts** — Application Insights alerts on 5xx error rate and response time
+- **Logs** - Serilog structured logs shipped to Azure Application Insights
+- **Health checks** - `/health` endpoint for load balancer probes (future enhancement)
+- **Alerts** - Application Insights alerts on 5xx error rate and response time
 
 ### Scale Considerations
 
