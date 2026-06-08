@@ -13,7 +13,7 @@ namespace SensitiveWords.Infrastructure.Persistence.Repositories
             const string sql = """
             SELECT Id, Word, CreatedAt, UpdatedAt
             FROM SensitiveWords
-            ORDER BY Word
+            ORDER BY LEN(Word) DESC
             """;
 
             await using var connection = CreateConnection();
