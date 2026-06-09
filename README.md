@@ -94,7 +94,7 @@ The `CachedSensitiveWordRepository` wraps the Dapper repository using the decora
 **Sanitisation Algorithm - Compiled Regex with Longest-Match-First**
 Words are sorted by length descending before building the Regex pattern. This ensures multi-word phrases like `SELECT * FROM` are matched before their component words (`SELECT`). The pattern uses `\b` word boundaries so substrings are never incorrectly starred - `SELECTION` is not affected by the word `SELECT`. A 2-second regex timeout prevents ReDoS attacks on malicious input.
 
-**Validation -  Dedicated Validator Classes**
+**Validation - Dedicated Validator Classes**
 Input validation lives in the Application layer, not in controllers. Controllers call validators and return `ValidationProblemDetails` (RFC 7807) on failure. This keeps controllers thin and validation independently testable.
 
 **Error Handling - Global Middleware**
@@ -102,6 +102,36 @@ All unhandled exceptions are caught by `ExceptionHandlingMiddleware` and returne
 
 **Logging - Structured Serilog**
 All logs are structured and written to rolling daily files under `logs/`. Every log entry carries `RequestId`, `ConnectionId`, and `SourceContext` - allowing full request tracing from a single log file. The bootstrap logger captures startup failures before the host is built.
+
+---
+
+## Testing
+
+Unit tests are in `tests/SensitiveWords.UnitTests` and cover the Application layer in isolation - no database, no HTTP stack.
+
+### Run tests
+
+```bash
+dotnet test
+```
+
+### Run with coverage
+
+```bash
+dotnet test --collect:"XPlat Code Coverage" --settings tests/SensitiveWords.UnitTests/coverlet.runsettings
+```
+
+Coverage is measured on the Application layer only. `SensitiveWordRepository` is excluded via `coverlet.runsettings` - it executes raw SQL against a real database and belongs in integration tests, not unit tests.
+
+### What is tested
+
+| Area | Coverage |
+|------|----------|
+| `MessageSanitiserService` | Sanitisation logic, word boundaries, case-insensitivity, empty word list, ReDoS guard |
+| `CachedSensitiveWordRepository` | Cache hit/miss, TTL, invalidation on all write operations |
+| `CreateSensitiveWordRequestValidator` | Empty, whitespace, length, invalid characters |
+| `UpdateSensitiveWordRequestValidator` | Empty, whitespace, length, invalid characters |
+| `SanitiseRequestValidator` | Empty, whitespace, exceeds 10,000 character limit |
 
 ---
 
