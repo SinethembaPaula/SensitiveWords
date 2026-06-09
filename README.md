@@ -173,6 +173,7 @@ Connection strings and API keys are stored in **Azure Key Vault** and injected a
 Push to main
     → Build
     → Unit Tests
+    → Integration Tests (against a containerised SQL Server instance)
     → Docker image build
     → Push to Azure Container Registry
     → Deploy to App Service (zero-downtime slot swap)
