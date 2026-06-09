@@ -10,6 +10,11 @@ namespace SensitiveWords.Api.Controllers
     [Produces("application/json")]
     public sealed class MessagesController(IMessageSanitiserService sanitiserService) : ControllerBase
     {
+        /// <summary>Sanitises a message by replacing sensitive words with asterisks.</summary>
+        /// <param name="request">The message to sanitise.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <response code="200">Sanitised message returned.</response>
+        /// <response code="400">Input is empty or exceeds 10,000 characters.</response>
         [HttpPost("sanitise")]
         [ProducesResponseType(typeof(SanitiseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]

@@ -1,3 +1,4 @@
+using System.Reflection;
 using SensitiveWords.Api.Middleware;
 using SensitiveWords.Application.Interfaces;
 using SensitiveWords.Application.Services;
@@ -34,6 +35,10 @@ try
             Version = "v1",
             Description = "Sanitises messages by replacing sensitive words with asterisks."
         });
+
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        options.IncludeXmlComments(xmlPath);
     });
     builder.Services.AddEndpointsApiExplorer();
 
