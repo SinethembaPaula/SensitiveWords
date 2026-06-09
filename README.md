@@ -42,7 +42,7 @@ Copy `appsettings.example.json` to `appsettings.json` and update the connection 
 dotnet run --project src/SensitiveWords.Api
 ```
 
-Navigate to `https://localhost:{port}/swagger` to explore the API.
+Navigate to `http://localhost:5087/swagger` to explore the API.
 
 ---
 
